@@ -39,7 +39,9 @@ export default class {
           : tokenConfig.main_http_endpoint // eslint-disable-line comma-dangle
       ));
       this.injected = false;
+      this.parent.ui.disableEtherInput();
     }
+    this.parent.ui.disableClaimButton();
     this.checkNetworkAndInit();
   }
 
@@ -104,14 +106,15 @@ export default class {
         if (!error) {
           console.log(transactionId);
           this.parent.ui.logTransaction(result);
+          alertify.success(strings.inf_msg_claim_success);
         } else {
           console.log(error);
-          this.parent.ui.logTransactionErr(error.toString());
+          alertify.error(error.message.split('\n')[0]);
         }
       });
     } catch (e) {
       console.log('Excep:', e);
-      this.parent.ui.logTransactionErr(e.message);
+      alertify.error(e.message.split('\n')[0]);
     }
     this.parent.ui.enableClaimButton();
   }
@@ -161,13 +164,16 @@ export default class {
   }
 
   tokensClaimedEvent() {
+    if (!this.injected) {
+      return;
+    }
     const claimEvent = this.tokenInstance.TokensClaimedEvent();
     claimEvent.watch((err, result) => {
       if (!err) {
         console.log(result);
         this.fetchContractDataAndUpdate();
       } else {
-        throw new SupError(err);
+        throw new SupError(err.message.split('\n')[0]);
       }
     });
   }
